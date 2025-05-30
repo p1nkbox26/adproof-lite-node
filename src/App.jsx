@@ -49,10 +49,10 @@ const compressPhoto = (file, callback) => {
 function RoleSelection({ onSelect }) {
   return (
     <div className="container">
-     <h1>AdProof Lite</h1>
-<h2>Выберите роль</h2>
-<button onClick={() => onSelect('admin')}>Администратор</button>
-<button onClick={() => onSelect('promoter')}>Промоутер</button>
+      <h1>AdProof Lite</h1>
+      <h2>Выберите роль</h2>
+      <button onClick={() => onSelect('admin')}>Администратор</button>
+      <button onClick={() => onSelect('promoter')}>Промоутер</button>
     </div>
   );
 }
@@ -69,14 +69,14 @@ function LoginPage({ role, onLogin }) {
         updateUserEmailHeader(email);
         onLogin({ role: 'admin', email });
       } else {
-        setError('Invalid email or password');
+        setError('Неверный email или пароль');
       }
     } else {
-      if (!supabase) { setError('Supabase is unavailable'); return; }
+      if (!supabase) { setError('Supabase недоступен'); return; }
       updateUserEmailHeader(email);
       const { data, error } = await supabase.from('users').select('*').eq('email', email).eq('role', 'promoter').single();
-      if (error || !data) { setError('User not found'); return; }
-      if (data.password !== password) { setError('Invalid password'); return; }
+      if (error || !data) { setError('Пользователь не найден'); return; }
+      if (data.password !== password) { setError('Неверный пароль'); return; }
       onLogin({ role: 'promoter', email, full_name: data.full_name });
     }
   };
@@ -84,28 +84,28 @@ function LoginPage({ role, onLogin }) {
   return (
     <div className="container">
       <h1>Вход ({role === 'admin' ? 'Администратор' : 'Промоутер'})</h1>
-{error && <p className="error">{error}</p>}
-<input
-  type="text"
-  placeholder="Email (для админа: admin)"
-  value={email}
-  onChange={e => setEmail(e.target.value)}
-/>
-<input
-  type="password"
-  placeholder="Пароль (для админа: admin123)"
-  value={password}
-  onChange={e => setPassword(e.target.value)}
-/>
-<button onClick={handleLogin}>Войти</button>
-{role === 'promoter' && (
-  <button
-    onClick={() => onLogin({ role: 'promoter', email: null, register: true })}
-    className="secondary-button"
-  >
-    Зарегистрироваться
-  </button>
-)}
+      {error && <p className="error">{error}</p>}
+      <input
+        type="text"
+        placeholder="Email (для админа: admin)"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="Пароль (для админа: admin123)"
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+      />
+      <button onClick={handleLogin}>Войти</button>
+      {role === 'promoter' && (
+        <button
+          onClick={() => onLogin({ role: 'promoter', email: null, register: true })}
+          className="secondary-button"
+        >
+          Зарегистрироваться
+        </button>
+      )}
     </div>
   );
 }
@@ -120,11 +120,11 @@ function RegisterPage({ onRegister }) {
 
   const handleRegister = async () => {
     if (!email || !password || !fullName || !phoneNumber || !district) {
-      setError('Please fill all fields');
+      setError('Заполните все поля');
       return;
     }
     if (!supabase) {
-      setError('Supabase is unavailable');
+      setError('Supabase недоступен');
       return;
     }
     setError(null);
@@ -133,16 +133,16 @@ function RegisterPage({ onRegister }) {
       email, password, full_name: fullName, phone_number: phoneNumber, district, status: 'pending'
     });
     if (error) {
-      setError('Registration error: ' + error.message);
+      setError('Ошибка регистрации: ' + error.message);
       return;
     }
-    alert('Request submitted. Please wait for approval.');
+    alert('Заявка отправлена. Ожидайте подтверждения.');
     onRegister();
   };
 
   return (
     <div className="container">
-      <h1>Promoter Registration</h1>
+      <h1>Регистрация промоутера</h1>
       {error && <p className="error">{error}</p>}
       <input
         type="email"
@@ -152,29 +152,29 @@ function RegisterPage({ onRegister }) {
       />
       <input
         type="password"
-        placeholder="Password"
+        placeholder="Пароль"
         value={password}
         onChange={e => setPassword(e.target.value)}
       />
       <input
         type="text"
-        placeholder="Full Name"
+        placeholder="ФИО"
         value={fullName}
         onChange={e => setFullName(e.target.value)}
       />
       <input
         type="text"
-        placeholder="Phone Number"
+        placeholder="Номер телефона"
         value={phoneNumber}
         onChange={e => setPhoneNumber(e.target.value)}
       />
       <input
         type="text"
-        placeholder="District"
+        placeholder="Район"
         value={district}
         onChange={e => setDistrict(e.target.value)}
       />
-      <button onClick={handleRegister}>Register</button>
+      <button onClick={handleRegister}>Зарегистрироваться</button>
     </div>
   );
 }
