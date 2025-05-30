@@ -4,15 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AdProof Lite</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     body {
       background-color: #FFFFFF;
       margin: 0;
       padding: 0;
       min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       font-family: 'Roboto', sans-serif;
     }
     .container {
@@ -23,6 +23,7 @@
       width: 100%;
       max-width: 400px;
       text-align: center;
+      margin: 16px auto;
     }
     h1 {
       font-size: 24px;
@@ -86,10 +87,721 @@
     .secondary-button:hover {
       background-color: #4B5563;
     }
+    .nav-bar {
+      display: flex;
+      justify-content: space-around;
+      background-color: #003087;
+      padding: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .nav-bar button {
+      width: auto;
+      padding: 8px 16px;
+      font-size: 14px;
+    }
+    .promoter-list {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .promoter-card {
+      border: 1px solid #D1D5DB;
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .promoter-card.completed {
+      background-color: #D1FAE5;
+    }
+    .promoter-card p {
+      font-size: 14px;
+      margin: 4px 0;
+    }
+    .profile-details {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .chat-box {
+      border: 1px solid #D1D5DB;
+      padding: 8px;
+      border-radius: 4px;
+      margin-top: 16px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .chat-message {
+      margin-bottom: 8px;
+      padding: 8px;
+      border-radius: 4px;
+    }
+    .chat-message.admin {
+      background-color: #E0F2FE;
+      text-align: right;
+    }
+    .chat-message.promoter {
+      background-color: #F3F4F6;
+      text-align: left;
+    }
+    .chat-message img {
+      max-width: 100%;
+      margin-top: 4px;
+      border-radius: 4px;
+    }
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .photo-grid img {
+      width: 100%;
+      height: 96px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .gallery-grid img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+    .user-card {
+      border: 1px solid #D1D5DB;
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+    .user-card p {
+      font-size: 14px;
+      margin: 4px 0;
+    }
+    .user-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .user-actions button {
+      padding: 4px;
+      font-size: 14px;
+      width: auto;
+    }
+    .approve-button {
+      background-color: #10B981;
+    }
+    .approve-button:hover {
+      background-color: #059669;
+    }
+    .reject-button {
+      background-color: #EF4444;
+    }
+    .reject-button:hover {
+      background-color: #DC2626;
+    }
+    .delete-button {
+      background-color: #EF4444;
+    }
+    .delete-button:hover {
+      background-color: #DC2626;
+    }
+    .accept-task-button {
+      background-color: #10B981;
+    }
+    .accept-task-button:hover {
+      background-color: #059669;
+    }
+    .complete-task-button {
+      background-color: #10B981;
+    }
+    .complete-task-button:hover {
+      background-color: #059669;
+    }
   </style>
 </head>
 <body>
   <div id="root"></div>
-  <script type="module" src="/src/index.jsx"></script>
+
+  <script type="text/javascript">
+    const { useState, useEffect } = React;
+    const { createRoot } = ReactDOM;
+
+    const supabase = Supabase.createClient(
+      'https://jsmfjeifckdyggrueivc.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzbWZqZWlmY2tkeWdncnVlaXZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2MDAwODcsImV4cCI6MjA2NDE3NjA4N30.L3JoQEX_jlpePq_MLyXnr4bXFQYEZQEUl-DHIX8Mk4Y',
+      {
+        global: {
+          headers: {
+            'Accept-Charset': 'UTF-8',
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Accept': 'application/json; charset=UTF-8',
+          },
+        },
+      }
+    );
+
+    const updateUserEmailHeader = (email) => {
+      if (supabase) {
+        supabase._rest = supabase._rest || supabase.rest;
+        supabase._rest.headers['x-user-email'] = email || '';
+      }
+    };
+
+    function RoleSelection({ onSelect }) {
+      return (
+        React.createElement('div', { className: 'container' },
+          React.createElement('h1', null, 'AdProof Lite'),
+          React.createElement('h2', null, 'Select Role'),
+          React.createElement('button', { onClick: () => onSelect('admin') }, 'Administrator'),
+          React.createElement('button', { onClick: () => onSelect('promoter') }, 'Promoter')
+        )
+      );
+    }
+
+    function LoginPage({ role, onLogin }) {
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [error, setError] = useState(null);
+
+      const handleLogin = async () => {
+        setError(null);
+        if (role === 'admin') {
+          if (email === 'admin' && password === 'admin123') {
+            updateUserEmailHeader(email);
+            onLogin({ role: 'admin', email });
+          } else {
+            setError('Invalid email or password');
+          }
+        } else {
+          if (!supabase) { setError('Supabase is unavailable'); return; }
+          updateUserEmailHeader(email);
+          const { data, error } = await supabase.from('users').select('*').eq('email', email).eq('role', 'promoter').single();
+          if (error || !data) { setError('User not found'); return; }
+          if (data.password !== password) { setError('Invalid password'); return; }
+          onLogin({ role: 'promoter', email, full_name: data.full_name });
+        }
+      };
+
+      return (
+        React.createElement('div', { className: 'container' },
+          React.createElement('h1', null, `Login (${role === 'admin' ? 'Administrator' : 'Promoter'})`),
+          error && React.createElement('p', { className: 'error' }, error),
+          React.createElement('input', {
+            type: 'text',
+            placeholder: 'Email (for admin: admin)',
+            value: email,
+            onChange: e => setEmail(e.target.value)
+          }),
+          React.createElement('input', {
+            type: 'password',
+            placeholder: 'Password (for admin: admin123)',
+            value: password,
+            onChange: e => setPassword(e.target.value)
+          }),
+          React.createElement('button', { onClick: handleLogin }, 'Login'),
+          role === 'promoter' && React.createElement('button', {
+            onClick: () => onLogin({ role: 'promoter', email: null, register: true }),
+            className: 'secondary-button'
+          }, 'Register')
+        )
+      );
+    }
+
+    function RegisterPage({ onRegister }) {
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [fullName, setFullName] = useState('');
+      const [phoneNumber, setPhoneNumber] = useState('');
+      const [district, setDistrict] = useState('');
+      const [bank, setBank] = useState('');
+      const [accountNumber, setAccountNumber] = useState('');
+      const [error, setError] = useState(null);
+
+      const handleRegister = async () => {
+        if (!email || !password || !fullName || !phoneNumber || !district || !bank || !accountNumber) {
+          setError('Please fill all fields');
+          return;
+        }
+        if (!supabase) {
+          setError('Supabase is unavailable');
+          return;
+        }
+        setError(null);
+        updateUserEmailHeader(email);
+        const { error } = await supabase.from('registration_requests').insert({
+          email, password, full_name: fullName, phone_number: phoneNumber, district, bank, account_number: accountNumber, status: 'pending'
+        });
+        if (error) {
+          setError('Registration error: ' + error.message);
+          return;
+        }
+        alert('Request submitted. Please wait for approval.');
+        onRegister();
+      };
+
+      return (
+        React.createElement('div', { className: 'container' },
+          React.createElement('h1', null, 'Promoter Registration'),
+          error && React.createElement('p', { className: 'error' }, error),
+          React.createElement('input', {
+            type: 'email',
+            placeholder: 'Email',
+            value: email,
+            onChange: e => setEmail(e.target.value)
+          }),
+          React.createElement('input', {
+            type: 'password',
+            placeholder: 'Password',
+            value: password,
+            onChange: e => setPassword(e.target.value)
+          }),
+          React.createElement('input', {
+            type: 'text',
+            placeholder: 'Full Name',
+            value: fullName,
+            onChange: e => setFullName(e.target.value)
+          }),
+          React.createElement('input', {
+            type: 'text',
+            placeholder: 'Phone Number',
+            value: phoneNumber,
+            onChange: e => setPhoneNumber(e.target.value)
+          }),
+          React.createElement('input', {
+            type: 'text',
+            placeholder: 'District',
+            value: district,
+            onChange: e => setDistrict(e.target.value)
+          }),
+          React.createElement('input', {
+            type: 'text',
+            placeholder: 'Bank',
+            value: bank,
+            onChange: e => setBank(e.target.value)
+          }),
+          React.createElement('input', {
+            type: 'text',
+            placeholder: 'Account Number',
+            value: accountNumber,
+            onChange: e => setAccountNumber(e.target.value)
+          }),
+          React.createElement('button', { onClick: handleRegister }, 'Register')
+        )
+      );
+    }
+
+    function AdminPromoters({ adminEmail, onLogout }) {
+      const [promoters, setPromoters] = useState([]);
+      const [selectedPromoter, setSelectedPromoter] = useState(null);
+      const [photos, setPhotos] = useState([]);
+      const [messages, setMessages] = useState([]);
+      const [newMessage, setNewMessage] = useState(null);
+      const [error, setError] = useState(null);
+
+      useEffect(() => {
+        if (!supabase) return;
+        updateUserEmailHeader(adminEmail);
+        supabase.from('users').select('*').eq('role', 'promoter').order('last_activity', { ascending: false })
+          .then(({ data, error }) => {
+            if (error) setError('Error loading promoters: ' + error.message);
+            else setPromoters(data || []);
+          });
+      }, [adminEmail]);
+
+      const loadPromoterDetails = async (promoter) => {
+        setSelectedPromoter(promoter);
+        updateUserEmailHeader(adminEmail);
+        const { data: photoData, error: photoError } = await supabase.from('photos').select('*').eq('promoter_id', promoter.email);
+        if (photoError) setError('Error loading photos: ' + photoError.message);
+        else setPhotos(photoData || []);
+
+        const { data: messageData, error: messageError } = await supabase.from('messages').select('*').or(`sender.eq.${adminEmail},receiver.eq.${adminEmail}`).or(`sender.eq.${promoter.email},receiver.eq.${promoter.email}`).order('created_at', { ascending: true });
+        if (messageError) setError('Error loading messages: ' + messageError.message);
+        else setMessages(messageData || []);
+      };
+
+      const sendMessage = async () => {
+        if (!newMessage || !selectedPromoter) return;
+        updateUserEmailHeader(adminEmail);
+        let messageContent = newMessage;
+        if (newMessage instanceof File) {
+          const fileName = `${selectedPromoter.email}/${Date.now()}.jpg`;
+          const { error: uploadError } = await supabase.storage.from('messages').upload(fileName, newMessage);
+          if (uploadError) {
+            setError('Upload error: ' + uploadError.message);
+            return;
+          }
+          messageContent = supabase.storage.from('messages').getPublicUrl(fileName).data.publicUrl;
+        }
+        const { error } = await supabase.from('messages').insert({
+          sender: adminEmail,
+          receiver: selectedPromoter.email,
+          content: messageContent,
+          is_image: newMessage instanceof File
+        });
+        if (error) setError('Error sending message: ' + error.message);
+        else {
+          setMessages([...messages, { sender: adminEmail, receiver: selectedPromoter.email, content: messageContent, is_image: newMessage instanceof File, created_at: new Date().toISOString() }]);
+          setNewMessage(null);
+        }
+      };
+
+      return (
+        React.createElement('div', null,
+          React.createElement('div', { className: 'nav-bar' },
+            React.createElement('button', { onClick: () => setSelectedPromoter(null) }, 'Promoters'),
+            React.createElement('button', { onClick: () => window.location.hash = 'users' }, 'Users'),
+            React.createElement('button', { onClick: onLogout, className: 'reject-button' }, 'Logout')
+          ),
+          selectedPromoter
+            ? React.createElement('div', { className: 'profile-details' },
+                React.createElement('h1', null, `Profile: ${selectedPromoter.full_name}`),
+                React.createElement('p', null, `Email: ${selectedPromoter.email}`),
+                React.createElement('p', null, `Phone: ${selectedPromoter.phone_number}`),
+                React.createElement('p', null, `District: ${selectedPromoter.district}`),
+                React.createElement('p', null, `Bank: ${selectedPromoter.bank}`),
+                React.createElement('p', null, `Account Number: ${selectedPromoter.account_number}`),
+                React.createElement('h2', null, 'Chat'),
+                React.createElement('div', { className: 'chat-box' },
+                  messages.map(message =>
+                    React.createElement('div', { key: message.created_at, className: `chat-message ${message.sender === adminEmail ? 'admin' : 'promoter'}` },
+                      React.createElement('p', null, `${message.sender}: `),
+                      message.is_image
+                        ? React.createElement('img', { src: message.content, alt: 'Message' })
+                        : React.createElement('p', null, message.content),
+                      React.createElement('p', { style: { fontSize: '12px', color: '#6B7280' } }, new Date(message.created_at).toLocaleString())
+                    )
+                  )
+                ),
+                React.createElement('input', {
+                  type: 'file',
+                  accept: 'image/*',
+                  onChange: e => setNewMessage(e.target.files[0]),
+                  style: { width: '100%', marginTop: '8px' }
+                }),
+                React.createElement('button', { onClick: sendMessage, disabled: !newMessage }, 'Send Message'),
+                React.createElement('h2', null, 'Photos'),
+                React.createElement('div', { className: 'gallery-grid' },
+                  photos.map(photo =>
+                    React.createElement('img', { key: photo.id, src: photo.photo_url, alt: 'Photo' })
+                  )
+                )
+              )
+            : React.createElement('div', { className: 'promoter-list' },
+                error && React.createElement('p', { className: 'error' }, error),
+                !supabase && React.createElement('p', { className: 'error' }, 'Error: Supabase is unavailable'),
+                promoters.map(promoter =>
+                  React.createElement('div', {
+                    key: promoter.email,
+                    className: `promoter-card ${promoter.current_task_status === 'completed' ? 'completed' : ''}`,
+                    onClick: () => loadPromoterDetails(promoter)
+                  },
+                    React.createElement('p', null, `Name: ${promoter.full_name}`),
+                    React.createElement('p', null, `Email: ${promoter.email}`),
+                    React.createElement('p', null, `Last Activity: ${promoter.last_activity ? new Date(promoter.last_activity).toLocaleString() : 'Never'}`),
+                    React.createElement('p', null, `Task Status: ${promoter.current_task_status || 'No task'}`)
+                  )
+                )
+              )
+        )
+      );
+    }
+
+    function AdminUsers({ adminEmail, onLogout }) {
+      const [requests, setRequests] = useState([]);
+      const [promoters, setPromoters] = useState([]);
+      const [error, setError] = useState(null);
+
+      useEffect(() => {
+        if (!supabase) return;
+        updateUserEmailHeader(adminEmail);
+        supabase.from('registration_requests').select('*').eq('status', 'pending').order('created_at', { ascending: false })
+          .then(({ data, error }) => {
+            if (error) setError('Error loading requests: ' + error.message);
+            else setRequests(data || []);
+          });
+        supabase.from('users').select('*').eq('role', 'promoter')
+          .then(({ data, error }) => {
+            if (error) setError('Error loading promoters: ' + error.message);
+            else setPromoters(data || []);
+          });
+      }, [adminEmail]);
+
+      const approveRequest = async (request) => {
+        if (!supabase) return;
+        updateUserEmailHeader(adminEmail);
+        const { error: insertError } = await supabase.from('users').insert({
+          email: request.email, password: request.password, role: 'promoter',
+          full_name: request.full_name, phone_number: request.phone_number, district: request.district,
+          bank: request.bank, account_number: request.account_number, last_activity: new Date().toISOString()
+        });
+        if (insertError) { setError('Approval error: ' + insertError.message); return; }
+        await supabase.from('registration_requests').delete().eq('id', request.id);
+        setRequests(requests.filter(r => r.id !== request.id));
+        setPromoters([...promoters, {
+          email: request.email, full_name: request.full_name, phone_number: request.phone_number,
+          district: request.district, bank: request.bank, account_number: request.account_number,
+          last_activity: new Date().toISOString()
+        }]);
+        alert('Request approved');
+      };
+
+      const rejectRequest = async (id) => {
+        if (!supabase) return;
+        updateUserEmailHeader(adminEmail);
+        await supabase.from('registration_requests').delete().eq('id', id);
+        setRequests(requests.filter(r => r.id !== id));
+        alert('Request rejected');
+      };
+
+      const deletePromoter = async (email) => {
+        if (!supabase) return;
+        updateUserEmailHeader(adminEmail);
+        await supabase.from('users').delete().eq('email', email);
+        setPromoters(promoters.filter(p => p.email !== email));
+        alert('Promoter deleted');
+      };
+
+      return (
+        React.createElement('div', null,
+          React.createElement('div', { className: 'nav-bar' },
+            React.createElement('button', { onClick: () => window.location.hash = 'promoters' }, 'Promoters'),
+            React.createElement('button', { onClick: () => window.location.hash = 'users' }, 'Users'),
+            React.createElement('button', { onClick: onLogout, className: 'reject-button' }, 'Logout')
+          ),
+          React.createElement('div', { className: 'promoter-list' },
+            error && React.createElement('p', { className: 'error' }, error),
+            !supabase && React.createElement('p', { className: 'error' }, 'Error: Supabase is unavailable'),
+            React.createElement('h1', null, 'Pending Registrations'),
+            requests.map(request =>
+              React.createElement('div', { key: request.id, className: 'user-card' },
+                React.createElement('p', null, `Email: ${request.email}`),
+                React.createElement('p', null, `Full Name: ${request.full_name}`),
+                React.createElement('p', null, `Phone: ${request.phone_number}`),
+                React.createElement('p', null, `District: ${request.district}`),
+                React.createElement('div', { className: 'user-actions' },
+                  React.createElement('button', { onClick: () => approveRequest(request), className: 'approve-button' }, 'Approve'),
+                  React.createElement('button', { onClick: () => rejectRequest(request.id), className: 'reject-button' }, 'Reject')
+                )
+              )
+            ),
+            React.createElement('h1', null, 'Current Promoters'),
+            promoters.map(promoter =>
+              React.createElement('div', { key: promoter.email, className: 'user-card' },
+                React.createElement('p', null, `Email: ${promoter.email}`),
+                React.createElement('p', null, `Full Name: ${promoter.full_name}`),
+                React.createElement('div', { className: 'user-actions' },
+                  React.createElement('button', { onClick: () => deletePromoter(promoter.email), className: 'delete-button' }, 'Delete')
+                )
+              )
+            )
+          )
+        )
+      );
+    }
+
+    function PromoterMain({ user, onLogout }) {
+      const [tasks, setTasks] = useState([]);
+      const [selectedTask, setSelectedTask] = useState(null);
+      const [messages, setMessages] = useState([]);
+      const [newMessage, setNewMessage] = useState(null);
+      const [error, setError] = useState(null);
+      const [timeLeft, setTimeLeft] = useState(null);
+
+      useEffect(() => {
+        if (!supabase) return;
+        updateUserEmailHeader(user.email);
+        supabase.from('tasks').select('*').eq('promoter_email', user.email).order('created_at', { ascending: false })
+          .then(({ data, error }) => {
+            if (error) setError('Error loading tasks: ' + error.message);
+            else setTasks(data || []);
+          });
+      }, [user.email]);
+
+      const loadTaskDetails = async (task) => {
+        setSelectedTask(task);
+        updateUserEmailHeader(user.email);
+        const { data: messageData, error: messageError } = await supabase.from('messages').select('*').or(`sender.eq.${user.email},receiver.eq.${user.email}`).or(`sender.eq.admin,receiver.eq.admin`).order('created_at', { ascending: true });
+        if (messageError) setError('Error loading messages: ' + messageError.message);
+        else setMessages(messageData || []);
+
+        if (task.status === 'accepted') {
+          const deadline = new Date(task.accepted_at);
+          deadline.setDate(deadline.getDate() + 2);
+          const interval = setInterval(() => {
+            const now = new Date();
+            const diff = deadline - now;
+            if (diff <= 0) {
+              setTimeLeft('Time expired');
+              clearInterval(interval);
+            } else {
+              const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+              const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+              const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+              setTimeLeft(`${days}d ${hours}h ${minutes}m`);
+            }
+          }, 1000);
+          return () => clearInterval(interval);
+        }
+      };
+
+      const acceptTask = async (task) => {
+        if (!supabase) return;
+        updateUserEmailHeader(user.email);
+        const { error } = await supabase.from('tasks').update({ status: 'accepted', accepted_at: new Date().toISOString() }).eq('id', task.id);
+        if (error) setError('Error accepting task: ' + error.message);
+        else {
+          setTasks(tasks.map(t => t.id === task.id ? { ...t, status: 'accepted', accepted_at: new Date().toISOString() } : t));
+          loadTaskDetails({ ...task, status: 'accepted', accepted_at: new Date().toISOString() });
+          await supabase.from('users').update({ last_activity: new Date().toISOString() }).eq('email', user.email);
+        }
+      };
+
+      const completeTask = async (task) => {
+        if (!supabase) return;
+        updateUserEmailHeader(user.email);
+        const { error } = await supabase.from('tasks').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', task.id);
+        if (error) setError('Error completing task: ' + error.message);
+        else {
+          setTasks(tasks.map(t => t.id === task.id ? { ...t, status: 'completed', completed_at: new Date().toISOString() } : t));
+          setSelectedTask(null);
+          await supabase.from('users').update({ last_activity: new Date().toISOString(), current_task_status: 'completed' }).eq('email', user.email);
+        }
+      };
+
+      const sendMessage = async () => {
+        if (!newMessage || !selectedTask) return;
+        updateUserEmailHeader(user.email);
+        const fileName = `${user.email}/${Date.now()}.jpg`;
+        const { error: uploadError } = await supabase.storage.from('messages').upload(fileName, newMessage);
+        if (uploadError) {
+          setError('Upload error: ' + uploadError.message);
+          return;
+        }
+        const messageContent = supabase.storage.from('messages').getPublicUrl(fileName).data.publicUrl;
+        const { error } = await supabase.from('messages').insert({
+          sender: user.email,
+          receiver: 'admin',
+          content: messageContent,
+          is_image: true
+        });
+        if (error) setError('Error sending message: ' + error.message);
+        else {
+          setMessages([...messages, { sender: user.email, receiver: 'admin', content: messageContent, is_image: true, created_at: new Date().toISOString() }]);
+          setNewMessage(null);
+          await supabase.from('users').update({ last_activity: new Date().toISOString() }).eq('email', user.email);
+        }
+      };
+
+      return (
+        React.createElement('div', { className: 'promoter-list' },
+          React.createElement('div', { className: 'nav-bar' },
+            React.createElement('button', { onClick: () => setSelectedTask(null) }, 'Tasks'),
+            React.createElement('button', { onClick: onLogout, className: 'reject-button' }, 'Logout')
+          ),
+          selectedTask
+            ? React.createElement('div', null,
+                React.createElement('h1', null, 'Task Details'),
+                React.createElement('img', { src: selectedTask.route_image, alt: 'Route Map', style: { maxWidth: '100%', marginBottom: '16px', borderRadius: '4px' } }),
+                selectedTask.status === 'pending' && React.createElement('button', { onClick: () => acceptTask(selectedTask), className: 'accept-task-button' }, 'Accept Task'),
+                selectedTask.status === 'accepted' && React.createElement('div', null,
+                  React.createElement('p', null, `Time Left: ${timeLeft || 'Calculating...'}`),
+                  React.createElement('h2', null, 'Chat with Admin'),
+                  React.createElement('div', { className: 'chat-box' },
+                    messages.map(message =>
+                      React.createElement('div', { key: message.created_at, className: `chat-message ${message.sender === user.email ? 'promoter' : 'admin'}` },
+                        React.createElement('p', null, `${message.sender}: `),
+                        message.is_image
+                          ? React.createElement('img', { src: message.content, alt: 'Message' })
+                          : React.createElement('p', null, message.content),
+                        React.createElement('p', { style: { fontSize: '12px', color: '#6B7280' } }, new Date(message.created_at).toLocaleString())
+                      )
+                    )
+                  ),
+                  React.createElement('input', {
+                    type: 'file',
+                    accept: 'image/*',
+                    capture: 'camera',
+                    onChange: e => setNewMessage(e.target.files[0]),
+                    style: { width: '100%', marginTop: '8px' }
+                  }),
+                  React.createElement('button', { onClick: sendMessage, disabled: !newMessage }, 'Send Photo'),
+                  React.createElement('button', { onClick: () => completeTask(selectedTask), className: 'complete-task-button' }, 'Complete Task')
+                )
+              )
+            : React.createElement('div', null,
+                error && React.createElement('p', { className: 'error' }, error),
+                !supabase && React.createElement('p', { className: 'error' }, 'Error: Supabase is unavailable'),
+                React.createElement('h1', null, 'Tasks'),
+                tasks.map(task =>
+                  React.createElement('div', { key: task.id, className: 'promoter-card', onClick: () => loadTaskDetails(task) },
+                    React.createElement('p', null, `Task ID: ${task.id}`),
+                    React.createElement('p', null, `Status: ${task.status}`),
+                    React.createElement('p', null, `Created At: ${new Date(task.created_at).toLocaleString()}`)
+                  )
+                )
+              )
+        )
+      );
+    }
+
+    function App() {
+      const [page, setPage] = useState('role');
+      const [role, setRole] = useState(null);
+      const [user, setUser] = useState(null);
+
+      const handleRoleSelect = (selectedRole) => {
+        setRole(selectedRole);
+        setPage('login');
+      };
+
+      const handleLogin = (userData) => {
+        if (userData.register) {
+          setPage('register');
+        } else {
+          setUser(userData);
+          setPage(userData.role === 'admin' ? 'promoters' : 'main');
+        }
+      };
+
+      const handleRegister = () => {
+        setPage('login');
+      };
+
+      const handleLogout = () => {
+        updateUserEmailHeader('');
+        setUser(null);
+        setRole(null);
+        setPage('role');
+        window.location.hash = '';
+      };
+
+      useEffect(() => {
+        const hash = window.location.hash.replace('#', '');
+        if (hash && user) {
+          setPage(hash);
+        }
+      }, [user]);
+
+      if (page === 'role') return React.createElement(RoleSelection, { onSelect: handleRoleSelect });
+      if (page === 'login') return React.createElement(LoginPage, { role: role, onLogin: handleLogin });
+      if (page === 'register') return React.createElement(RegisterPage, { onRegister: handleRegister });
+      if (page === 'promoters' && user) return React.createElement(AdminPromoters, { adminEmail: user.email, onLogout: handleLogout });
+      if (page === 'users' && user) return React.createElement(AdminUsers, { adminEmail: user.email, onLogout: handleLogout });
+      if (page === 'main' && user) return React.createElement(PromoterMain, { user: user, onLogout: handleLogout });
+      return React.createElement('div', null, 'Error: Invalid page');
+    }
+
+    const root = createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
 </body>
 </html>
