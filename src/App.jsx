@@ -9,6 +9,7 @@ const supabase = createClient(
       headers: {
         'Accept-Charset': 'UTF-8',
         'Content-Type': 'application/json; charset=UTF-8',
+        'Accept': 'application/json; charset=UTF-8',
       },
     },
   }
@@ -47,23 +48,11 @@ const compressPhoto = (file, callback) => {
 
 function RoleSelection({ onSelect }) {
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-      <div className="w-full max-w-sm p-6 bg-gray-50 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-center text-blue-900 mb-6">AdProof Lite</h1>
-        <h2 className="text-lg font-semibold text-center text-gray-600 mb-4">Выберите роль</h2>
-        <button
-          onClick={() => onSelect('admin')}
-          className="w-full mb-3 py-2 bg-blue-900 text-white rounded-md hover:bg-blue-800 transition-colors"
-        >
-          Администратор
-        </button>
-        <button
-          onClick={() => onSelect('promoter')}
-          className="w-full py-2 bg-blue-900 text-white rounded-md hover:bg-blue-800 transition-colors"
-        >
-          Промоутер
-        </button>
-      </div>
+    <div className="container">
+     <h1>AdProof Lite</h1>
+<h2>Выберите роль</h2>
+<button onClick={() => onSelect('admin')}>Администратор</button>
+<button onClick={() => onSelect('promoter')}>Промоутер</button>
     </div>
   );
 }
@@ -80,54 +69,43 @@ function LoginPage({ role, onLogin }) {
         updateUserEmailHeader(email);
         onLogin({ role: 'admin', email });
       } else {
-        setError('Неверный логин или пароль');
+        setError('Invalid email or password');
       }
     } else {
-      if (!supabase) { setError('Supabase не доступен'); return; }
+      if (!supabase) { setError('Supabase is unavailable'); return; }
       updateUserEmailHeader(email);
       const { data, error } = await supabase.from('users').select('*').eq('email', email).eq('role', 'promoter').single();
-      if (error || !data) { setError('Пользователь не найден'); return; }
-      if (data.password !== password) { setError('Неверный пароль'); return; }
+      if (error || !data) { setError('User not found'); return; }
+      if (data.password !== password) { setError('Invalid password'); return; }
       onLogin({ role: 'promoter', email, full_name: data.full_name });
     }
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-      <div className="w-full max-w-sm p-6 bg-gray-50 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-center text-blue-900 mb-6">
-          Вход ({role === 'admin' ? 'Администратор' : 'Промоутер'})
-        </h1>
-        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-        <input
-          type="text"
-          placeholder="Email (для админа: admin)"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          className="w-full p-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-900"
-        />
-        <input
-          type="password"
-          placeholder="Пароль (для админа: admin123)"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          className="w-full p-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-900"
-        />
-        <button
-          onClick={handleLogin}
-          className="w-full py-2 bg-blue-900 text-white rounded-md hover:bg-blue-800 transition-colors"
-        >
-          Войти
-        </button>
-        {role === 'promoter' && (
-          <button
-            onClick={() => onLogin({ role: 'promoter', email: null, register: true })}
-            className="w-full mt-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
-          >
-            Зарегистрироваться
-          </button>
-        )}
-      </div>
+    <div className="container">
+      <h1>Вход ({role === 'admin' ? 'Администратор' : 'Промоутер'})</h1>
+{error && <p className="error">{error}</p>}
+<input
+  type="text"
+  placeholder="Email (для админа: admin)"
+  value={email}
+  onChange={e => setEmail(e.target.value)}
+/>
+<input
+  type="password"
+  placeholder="Пароль (для админа: admin123)"
+  value={password}
+  onChange={e => setPassword(e.target.value)}
+/>
+<button onClick={handleLogin}>Войти</button>
+{role === 'promoter' && (
+  <button
+    onClick={() => onLogin({ role: 'promoter', email: null, register: true })}
+    className="secondary-button"
+  >
+    Зарегистрироваться
+  </button>
+)}
     </div>
   );
 }
@@ -142,11 +120,11 @@ function RegisterPage({ onRegister }) {
 
   const handleRegister = async () => {
     if (!email || !password || !fullName || !phoneNumber || !district) {
-      setError('Заполните все поля');
+      setError('Please fill all fields');
       return;
     }
     if (!supabase) {
-      setError('Supabase не доступен');
+      setError('Supabase is unavailable');
       return;
     }
     setError(null);
@@ -155,60 +133,48 @@ function RegisterPage({ onRegister }) {
       email, password, full_name: fullName, phone_number: phoneNumber, district, status: 'pending'
     });
     if (error) {
-      setError('Ошибка регистрации: ' + error.message);
+      setError('Registration error: ' + error.message);
       return;
     }
-    alert('Заявка отправлена. Ожидайте подтверждения.');
+    alert('Request submitted. Please wait for approval.');
     onRegister();
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-      <div className="w-full max-w-sm p-6 bg-gray-50 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-center text-blue-900 mb-6">Регистрация промоутера</h1>
-        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          className="w-full p-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-900"
-        />
-        <input
-          type="password"
-          placeholder="Пароль"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          className="w-full p-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-900"
-        />
-        <input
-          type="text"
-          placeholder="ФИО"
-          value={fullName}
-          onChange={e => setFullName(e.target.value)}
-          className="w-full p-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-900"
-        />
-        <input
-          type="text"
-          placeholder="Номер телефона"
-          value={phoneNumber}
-          onChange={e => setPhoneNumber(e.target.value)}
-          className="w-full p-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-900"
-        />
-        <input
-          type="text"
-          placeholder="Район"
-          value={district}
-          onChange={e => setDistrict(e.target.value)}
-          className="w-full p-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-900"
-        />
-        <button
-          onClick={handleRegister}
-          className="w-full py-2 bg-blue-900 text-white rounded-md hover:bg-blue-800 transition-colors"
-        >
-          Зарегистрироваться
-        </button>
-      </div>
+    <div className="container">
+      <h1>Promoter Registration</h1>
+      {error && <p className="error">{error}</p>}
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Full Name"
+        value={fullName}
+        onChange={e => setFullName(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Phone Number"
+        value={phoneNumber}
+        onChange={e => setPhoneNumber(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="District"
+        value={district}
+        onChange={e => setDistrict(e.target.value)}
+      />
+      <button onClick={handleRegister}>Register</button>
     </div>
   );
 }
@@ -222,7 +188,7 @@ function ModerationPage({ onBack, adminEmail }) {
     updateUserEmailHeader(adminEmail);
     supabase.from('registration_requests').select('*').eq('status', 'pending').order('created_at', { ascending: false })
       .then(({ data, error }) => {
-        if (error) setError('Ошибка загрузки заявок: ' + error.message);
+        if (error) setError('Error loading requests: ' + error.message);
         else setRequests(data || []);
       });
   }, [adminEmail]);
@@ -234,10 +200,10 @@ function ModerationPage({ onBack, adminEmail }) {
       email: request.email, password: request.password, role: 'promoter',
       full_name: request.full_name, phone_number: request.phone_number, district: request.district
     });
-    if (insertError) { setError('Ошибка подтверждения: ' + insertError.message); return; }
+    if (insertError) { setError('Approval error: ' + insertError.message); return; }
     await supabase.from('registration_requests').delete().eq('id', request.id);
     setRequests(requests.filter(r => r.id !== request.id));
-    alert('Заявка подтверждена');
+    alert('Request approved');
   };
 
   const rejectRequest = async (id) => {
@@ -245,25 +211,25 @@ function ModerationPage({ onBack, adminEmail }) {
     updateUserEmailHeader(adminEmail);
     await supabase.from('registration_requests').delete().eq('id', id);
     setRequests(requests.filter(r => r.id !== id));
-    alert('Заявка отклонена');
+    alert('Request rejected');
   };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto bg-white min-h-screen">
-      <h1 className="text-2xl font-bold mb-4 text-blue-600">Модерация регистраций</h1>
-      {error && <p className="text-red-500 mb-2">{error}</p>}
-      {!supabase && <p className="text-red-500 mb-2">Ошибка: Supabase не доступен</p>}
-      <button onClick={onBack} className="mb-4 p-2 bg-gray-500 text-white rounded hover:bg-gray-600">Назад</button>
-      <div className="grid grid-cols-1 gap-4">
+    <div style={{ padding: '16px', maxWidth: '960px', margin: '0 auto', backgroundColor: '#FFFFFF', minHeight: '100vh' }}>
+      <h1>Moderation Panel</h1>
+      {error && <p className="error">{error}</p>}
+      {!supabase && <p className="error">Error: Supabase is unavailable</p>}
+      <button onClick={onBack} className="secondary-button">Back</button>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
         {requests.map(request => (
-          <div key={request.id} className="border p-2 rounded shadow-sm">
-            <p className="text-sm">Email: {request.email}</p>
-            <p className="text-sm">ФИО: {request.full_name}</p>
-            <p className="text-sm">Телефон: {request.phone_number}</p>
-            <p className="text-sm">Район: {request.district}</p>
-            <div className="flex gap-2 mt-2">
-              <button onClick={() => approveRequest(request)} className="bg-green-500 text-white p-1 rounded hover:bg-green-600 text-sm">Подтвердить</button>
-              <button onClick={() => rejectRequest(request.id)} className="bg-red-500 text-white p-1 rounded hover:bg-red-600 text-sm">Отклонить</button>
+          <div key={request.id} style={{ border: '1px solid #D1D5DB', padding: '8px', borderRadius: '4px', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }}>
+            <p style={{ fontSize: '14px' }}>Email: {request.email}</p>
+            <p style={{ fontSize: '14px' }}>Full Name: {request.full_name}</p>
+            <p style={{ fontSize: '14px' }}>Phone: {request.phone_number}</p>
+            <p style={{ fontSize: '14px' }}>District: {request.district}</p>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+              <button onClick={() => approveRequest(request)} style={{ backgroundColor: '#10B981', padding: '4px', borderRadius: '4px', fontSize: '14px' }}>Approve</button>
+              <button onClick={() => rejectRequest(request.id)} style={{ backgroundColor: '#EF4444', padding: '4px', borderRadius: '4px', fontSize: '14px' }}>Reject</button>
             </div>
           </div>
         ))}
@@ -281,21 +247,21 @@ function PromoterPage({ user, onLogout }) {
   const [error, setError] = useState(null);
 
   const handleUpload = async () => {
-    if (!promoterId || !photo) return alert('Введите ID и выберите фото');
-    if (!supabase) return alert('Supabase не доступен');
+    if (!promoterId || !photo) return alert('Please enter ID and select a photo');
+    if (!supabase) return alert('Supabase is unavailable');
     setLoading(true);
     setError(null);
     try {
       compressPhoto(photo, async blob => {
         const fileName = `${promoterId}/${Date.now()}.jpg`;
         const { error: uploadError } = await supabase.storage.from('photos').upload(fileName, blob);
-        if (uploadError) throw new Error('Ошибка загрузки: ' + uploadError.message);
+        if (uploadError) throw new Error('Upload error: ' + uploadError.message);
         const { publicUrl } = supabase.storage.from('photos').getPublicUrl(fileName).data;
         updateUserEmailHeader(promoterId);
         const { error: dbError } = await supabase.from('photos').insert({ promoter_id: promoterId, type, photo_url: publicUrl });
-        if (dbError) throw new Error('Ошибка сохранения: ' + dbError.message);
+        if (dbError) throw new Error('Save error: ' + dbError.message);
         setPhoto(null);
-        alert('Фото загружено');
+        alert('Photo uploaded');
       });
     } catch (err) {
       setError(err.message);
@@ -309,51 +275,49 @@ function PromoterPage({ user, onLogout }) {
     updateUserEmailHeader(promoterId);
     supabase.from('photos').select('*').eq('promoter_id', promoterId).order('created_at', { ascending: false })
       .then(({ data, error }) => {
-        if (error) setError('Ошибка загрузки фото: ' + error.message);
+        if (error) setError('Error loading photos: ' + error.message);
         else setPhotos(data || []);
       });
   }, [promoterId]);
 
   return (
-    <div className="p-4 max-w-md mx-auto bg-white min-h-screen">
-      <h1 className="text-2xl font-bold mb-4 text-blue-600">AdProof Lite</h1>
-      <p className="text-sm mb-2">Вы вошли как: {user.full_name} ({user.email})</p>
-      <button onClick={onLogout} className="mb-4 p-2 bg-red-500 text-white rounded hover:bg-red-600">Выйти</button>
-      {error && <p className="text-red-500 mb-2">{error}</p>}
-      {!supabase && <p className="text-red-500 mb-2">Ошибка: Supabase не доступен</p>}
+    <div style={{ padding: '16px', maxWidth: '480px', margin: '0 auto', backgroundColor: '#FFFFFF', minHeight: '100vh' }}>
+      <h1>AdProof Lite</h1>
+      <p style={{ fontSize: '14px', marginBottom: '8px' }}>Logged in as: {user.full_name} ({user.email})</p>
+      <button onClick={onLogout} style={{ backgroundColor: '#EF4444', marginBottom: '16px' }}>Logout</button>
+      {error && <p className="error">{error}</p>}
+      {!supabase && <p className="error">Error: Supabase is unavailable</p>}
       <input
         type="text"
-        placeholder="Ваш ID (email)"
+        placeholder="Your ID (email)"
         value={promoterId}
         onChange={e => setPromoterId(e.target.value)}
-        className="w-full p-2 mb-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         disabled
       />
       <select
         value={type}
         onChange={e => setType(e.target.value)}
-        className="w-full p-2 mb-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
-        <option value="board">Доска объявлений</option>
-        <option value="mailbox">Почтовые ящики</option>
+        <option value="board">Billboard</option>
+        <option value="mailbox">Mailboxes</option>
       </select>
       <input
         type="file"
         accept="image/*"
         onChange={e => setPhoto(e.target.files[0])}
-        className="w-full mb-2 text-gray-600"
+        style={{ width: '100%', marginBottom: '8px', color: '#6B7280' }}
       />
       <button
         onClick={handleUpload}
         disabled={loading || !supabase}
-        className={`w-full p-2 rounded text-white ${loading || !supabase ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'}`}
+        style={{ backgroundColor: loading || !supabase ? '#6B7280' : '#003087' }}
       >
-        {loading ? 'Загрузка...' : 'Загрузить фото'}
+        {loading ? 'Uploading...' : 'Upload Photo'}
       </button>
-      <h2 className="text-lg font-semibold mt-4">Ваши фото</h2>
-      <div className="grid grid-cols-2 gap-2 mt-2">
+      <h2 style={{ fontSize: '18px', fontWeight: '600', marginTop: '16px' }}>Your Photos</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
         {photos.map(photo => (
-          <img key={photo.id} src={photo.photo_url} alt="Фото" className="w-full h-24 object-cover rounded" />
+          <img key={photo.id} src={photo.photo_url} alt="Photo" style={{ width: '100%', height: '96px', objectFit: 'cover', borderRadius: '4px' }} />
         ))}
       </div>
     </div>
@@ -371,16 +335,16 @@ function AdminPage({ onLogout, onModerate, adminEmail }) {
     let query = supabase.from('photos').select('*').order('created_at', { ascending: false });
     if (filterId) query = query.eq('promoter_id', filterId);
     query.then(({ data, error }) => {
-      if (error) setError('Ошибка загрузки фото: ' + error.message);
+      if (error) setError('Error loading photos: ' + error.message);
       else setPhotos(data || []);
     });
   }, [filterId, adminEmail]);
 
   const updateStatus = async (id, status) => {
-    if (!supabase) return alert('Supabase не доступен');
+    if (!supabase) return alert('Supabase is unavailable');
     updateUserEmailHeader(adminEmail);
     const { error } = await supabase.from('photos').update({ status }).eq('id', id);
-    if (error) return alert('Ошибка: ' + error.message);
+    if (error) return alert('Error: ' + error.message);
     setPhotos(photos.map(p => (p.id === id ? { ...p, status } : p)));
   };
 
@@ -399,36 +363,35 @@ function AdminPage({ onLogout, onModerate, adminEmail }) {
   };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto bg-white min-h-screen">
-      <h1 className="text-2xl font-bold mb-4 text-blue-600">Админ-панель</h1>
-      <button onClick={onLogout} className="mb-4 p-2 bg-red-500 text-white rounded hover:bg-red-600">Выйти</button>
-      <button onClick={onModerate} className="mb-4 ml-2 p-2 bg-blue-500 text-white rounded hover:bg-blue-600">Модерация регистраций</button>
-      {error && <p className="text-red-500 mb-2">{error}</p>}
-      {!supabase && <p className="text-red-500 mb-2">Ошибка: Supabase не доступен</p>}
+    <div style={{ padding: '16px', maxWidth: '960px', margin: '0 auto', backgroundColor: '#FFFFFF', minHeight: '100vh' }}>
+      <h1>Admin Panel</h1>
+      <button onClick={onLogout} style={{ backgroundColor: '#EF4444', marginBottom: '16px' }}>Logout</button>
+      <button onClick={onModerate} style={{ backgroundColor: '#003087', marginBottom: '16px', marginLeft: '8px' }}>Moderate Requests</button>
+      {error && <p className="error">{error}</p>}
+      {!supabase && <p className="error">Error: Supabase is unavailable</p>}
       <input
         type="text"
-        placeholder="Фильтр по ID промоутера"
+        placeholder="Filter by Promoter ID"
         value={filterId}
         onChange={e => setFilterId(e.target.value)}
-        className="w-full p-2 mb-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
       <button
         onClick={exportCSV}
         disabled={!supabase}
-        className={`mb-4 p-2 rounded text-white ${!supabase ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'}`}
+        style={{ backgroundColor: !supabase ? '#6B7280' : '#10B981', marginBottom: '16px' }}
       >
-        Экспорт в CSV
+        Export to CSV
       </button>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
         {photos.map(photo => (
-          <div key={photo.id} className="border p-2 rounded shadow-sm">
-            <img src={photo.photo_url} alt="Фото" className="w-full h-32 object-cover mb-2 rounded" />
-            <p className="text-sm">ID: {photo.promoter_id}</p>
-            <p className="text-sm">Тип: {photo.type === 'board' ? 'Доска' : 'Ящики'}</p>
-            <p className="text-sm">Статус: {photo.status}</p>
-            <div className="flex gap-2 mt-2">
-              <button onClick={() => updateStatus(photo.id, 'unique')} className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600 text-sm">Уникальное</button>
-              <button onClick={() => updateStatus(photo.id, 'duplicate')} className="bg-red-500 text-white p-1 rounded hover:bg-red-600 text-sm">Повтор</button>
+          <div key={photo.id} style={{ border: '1px solid #D1D5DB', padding: '8px', borderRadius: '4px', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }}>
+            <img src={photo.photo_url} alt="Photo" style={{ width: '100%', height: '128px', objectFit: 'cover', marginBottom: '8px', borderRadius: '4px' }} />
+            <p style={{ fontSize: '14px' }}>ID: {photo.promoter_id}</p>
+            <p style={{ fontSize: '14px' }}>Type: {photo.type === 'board' ? 'Billboard' : 'Mailboxes'}</p>
+            <p style={{ fontSize: '14px' }}>Status: {photo.status}</p>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+              <button onClick={() => updateStatus(photo.id, 'unique')} style={{ backgroundColor: '#003087', padding: '4px', borderRadius: '4px', fontSize: '14px' }}>Unique</button>
+              <button onClick={() => updateStatus(photo.id, 'duplicate')} style={{ backgroundColor: '#EF4444', padding: '4px', borderRadius: '4px', fontSize: '14px' }}>Duplicate</button>
             </div>
           </div>
         ))}
@@ -481,5 +444,5 @@ export default function App() {
   if (page === 'promoter' && user) return <PromoterPage user={user} onLogout={handleLogout} />;
   if (page === 'admin' && user) return <AdminPage onLogout={handleLogout} onModerate={handleModerate} adminEmail={user.email} />;
   if (page === 'moderation' && user) return <ModerationPage onBack={handleBackFromModeration} adminEmail={user.email} />;
-  return <div>Ошибка: Неверная страница</div>;
+  return <div>Error: Invalid page</div>;
 }
